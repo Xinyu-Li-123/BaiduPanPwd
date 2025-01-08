@@ -2,10 +2,12 @@
 # 4位小写字母和数字所有组合
 pwdfile=""
 # 线程数
-threadnum=1
+threadnum=8
 # 显示提取码错误网页元素id，目前不需要修改
 element_id = "xbwNKkN"
 # 匹配的链接
 start_head = "https://pan.baidu.com/s/"
 # 需破解的网盘链接
-url="https://pan.baidu.com/share/init?surl=t5fahahxsAZvNZ0jujrQKQ"
+# url="https://pan.baidu.com/share/init?surl=1EPWGWYwya95-ISInkhYBTA"
+url="https://pan.baidu.com/s/1EPWGWYwya95-ISInkhYBTA"
+# url="https://pan.baidu.com/share/init?surl=t5fahahxsAZvNZ0jujrQKQ"
